@@ -14,25 +14,45 @@ jobs:
     steps:
       - name: 📥 Checkout code
         uses: actions/checkout@v4
+
       - name: ☕ Setup Java
         uses: actions/setup-java@v4
-        with: { distribution: 'temurin', java-version: '17' }
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: 🦋 Setup Flutter
         uses: subosito/flutter-action@v2
-        with: { flutter-version: 'stable', cache: true }
+        with:
+          # ✅ FIX: Use explicit version or '3.x' pattern
+          flutter-version-file: .flutter-version  # Reads version from file
+          channel: 'stable'
+          cache: true
+
       - name: 📦 Install dependencies
         run: flutter pub get
+
       - name: 🔍 Analyze & Format
         run: |
           dart format --set-exit-if-changed .
           flutter analyze
+
       - name: 🏗️ Build Release APK
-        run: flutter build apk --release
+        run: flutter build apk --release --no-tree-shake-icons
+
       - name: 📦 Build Release App Bundle
-        run: flutter build appbundle --release
-      - name: 📤 Upload APK
+        run: flutter build appbundle --release --no-tree-shake-icons
+
+      - name: 📤 Upload APK Artifact
         uses: actions/upload-artifact@v4
-        with: { name: android-apk, path: build/app/outputs/flutter-apk/app-release.apk }
-      - name: 📤 Upload AAB
+        with:
+          name: android-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+      - name: 📤 Upload AAB Artifact
         uses: actions/upload-artifact@v4
-        with: { name: android-aab, path: build/app/outputs/bundle/release/app-release.aab }
+        with:
+          name: android-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 7
